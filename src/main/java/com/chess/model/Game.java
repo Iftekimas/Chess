@@ -12,6 +12,8 @@ public class Game {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
+    private Winner winner = Winner.NONE;
     private Instant lastMoveTimestamp;
     private String turn;
     private String playerColor;
@@ -26,7 +28,7 @@ public class Game {
 
     public Game() {
         this.createdAt = LocalDateTime.now();
-        this.status = "ongoing";
+        this.status = "active";
     }
 
     // Getters y Setters (agrega el de moves)
@@ -96,6 +98,14 @@ public class Game {
 
     public void setLastMoveTimestamp(Instant lastMoveTimestamp) {
         this.lastMoveTimestamp = lastMoveTimestamp;
+    }
+
+    public Winner getWinner() {
+        return winner;
+    }
+
+    public void setWinner(Winner winner) {
+        this.winner = winner;
     }
 
 }

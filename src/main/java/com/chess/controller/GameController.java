@@ -1,6 +1,7 @@
 package com.chess.controller;
 
 import com.chess.model.Game;
+import com.chess.model.Winner;
 import com.chess.repository.GameRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -72,16 +73,43 @@ public class GameController {
             if ("white".equals(color)) {
                 // Descuenta tiempo del jugador blanco
                 game.setWhiteClock(game.getWhiteClock() - (int) secondsElapsed);
-                if (game.getWhiteClock() <= 0) {
-                    game.setStatus("timeout");
-                }
             } else {
                 // Descuenta tiempo del jugador negro
                 game.setBlackClock(game.getBlackClock() - (int) secondsElapsed);
-                if (game.getBlackClock() <= 0) {
-                    game.setStatus("timeout");
-                }
             }
+            // Verifica timeout y asigna ganador
+            if (game.getWhiteClock() <= 0) {
+                game.setStatus("timeout");
+                game.setWinner(Winner.BLACK);
+                return gameRepository.save(game);
+            }
+            if (game.getBlackClock() <= 0) {
+                game.setStatus("timeout");
+                game.setWinner(Winner.WHITE);
+                return gameRepository.save(game);
+            }
+
+            if (!"active".equals(game.getStatus())) {
+                throw new IllegalStateException("La partida ya no está activa.");
+            }
+        }
+
+        // 1. Validación: partida debe estar activa
+        if (!"active".equals(game.getStatus())) {
+            throw new IllegalStateException("La partida ya no está activa.");
+        }
+
+        // 2. Validación: reloj del jugador debe ser mayor a cero
+        if ("white".equals(color) && game.getWhiteClock() <= 0) {
+            throw new IllegalStateException("El jugador blanco no tiene tiempo restante.");
+        }
+        if ("black".equals(color) && game.getBlackClock() <= 0) {
+            throw new IllegalStateException("El jugador negro no tiene tiempo restante.");
+        }
+
+        // 3. Validación: debe ser el turno del jugador
+        if (!game.getTurn().equals(color)) {
+            throw new IllegalArgumentException("No es el turno del jugador " + color);
         }
 
         // Actualiza timestamp para el siguiente movimiento
