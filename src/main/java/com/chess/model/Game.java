@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.time.Instant;
 
 @Entity
 public class Game {
@@ -11,6 +12,8 @@ public class Game {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private Instant lastMoveTimestamp;
+    private String turn;
     private String playerColor;
     private int whiteClock;
     private int blackClock;
@@ -78,4 +81,21 @@ public class Game {
     public void setMoves(List<String> moves) {
         this.moves = moves;
     }
+
+    public String getTurn() {
+        return turn;
+    }
+
+    public void setTurn(String turn) {
+        this.turn = turn;
+    }
+
+    public Instant getLastMoveTimestamp() {
+        return lastMoveTimestamp;
+    }
+
+    public void setLastMoveTimestamp(Instant lastMoveTimestamp) {
+        this.lastMoveTimestamp = lastMoveTimestamp;
+    }
+
 }
