@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import java.util.List;
+import java.time.Instant;
+import java.time.Duration;
 
 @RestController
 @RequestMapping("/games")
@@ -44,8 +46,6 @@ public class GameController {
         return ResponseEntity.badRequest().body(ex.getMessage());
     }
 
-    // ...eliminado método duplicado makeMove para evitar ambigüedad...
-
     @GetMapping("/{id}/moves")
     public java.util.List<String> getMoves(@PathVariable Long id) {
         Game game = gameRepository.findById(id)
@@ -62,6 +62,30 @@ public class GameController {
         if (!game.getTurn().equals(color)) {
             throw new IllegalArgumentException("No es el turno del jugador " + color);
         }
+
+        // Lógica para descontar tiempo y actualizar timestamp
+        Instant now = Instant.now();
+
+        if (game.getLastMoveTimestamp() != null) {
+            long secondsElapsed = Duration.between(game.getLastMoveTimestamp(), now).getSeconds();
+
+            if ("white".equals(color)) {
+                // Descuenta tiempo del jugador blanco
+                game.setWhiteClock(game.getWhiteClock() - (int) secondsElapsed);
+                if (game.getWhiteClock() <= 0) {
+                    game.setStatus("timeout");
+                }
+            } else {
+                // Descuenta tiempo del jugador negro
+                game.setBlackClock(game.getBlackClock() - (int) secondsElapsed);
+                if (game.getBlackClock() <= 0) {
+                    game.setStatus("timeout");
+                }
+            }
+        }
+
+        // Actualiza timestamp para el siguiente movimiento
+        game.setLastMoveTimestamp(now);
 
         // Validación sencilla: el movimiento no puede estar vacío
         if (move == null || move.trim().isEmpty()) {
