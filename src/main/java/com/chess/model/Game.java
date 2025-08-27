@@ -8,6 +8,7 @@ import java.time.Instant;
 
 @Entity
 public class Game {
+    private String fen;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -62,6 +63,14 @@ public class Game {
 
     public String getStatus() {
         return status;
+    }
+
+    public String getFen() {
+        return fen;
+    }
+
+    public void setFen(String fen) {
+        this.fen = fen;
     }
 
     public void setStatus(String status) {
