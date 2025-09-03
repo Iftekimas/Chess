@@ -7,41 +7,115 @@ import java.util.List;
 import java.time.Instant;
 
 @Entity
+@Table(name = "games")
 public class Game {
-    private String fen;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(columnDefinition = "TEXT")
+    private String pgn;
+
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Winner winner = Winner.NONE;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private GameStatus status = GameStatus.ACTIVE;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PlayerColor playerColor;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PlayerColor turn = PlayerColor.WHITE;
+
     private Instant lastMoveTimestamp;
-    private String turn;
-    private String playerColor;
+
+    @Column(nullable = false)
     private int whiteClock;
+
+    @Column(nullable = false)
     private int blackClock;
-    private String status;
+
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    // Nueva lista de movimientos
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "game_moves", joinColumns = @JoinColumn(name = "game_id"))
+    @Column(name = "move_notation")
     private List<String> moves = new ArrayList<>();
 
     public Game() {
         this.createdAt = LocalDateTime.now();
-        this.status = "active";
     }
 
-    // Getters y Setters (agrega el de moves)
+    // Constructor con parámetros para mejor inicialización
+    public Game(PlayerColor playerColor, int whiteClock, int blackClock) {
+        this();
+        this.playerColor = playerColor;
+        this.whiteClock = whiteClock;
+        this.blackClock = blackClock;
+        this.pgn = GameConstants.EMPTY_PGN;
+    }
+
+    // Métodos de utilidad
+    public boolean isActive() {
+        return status == GameStatus.ACTIVE;
+    }
+
+    public boolean isGameOver() {
+        return status != GameStatus.ACTIVE;
+    }
+
+    public void addMove(String move) {
+        if (moves == null) {
+            moves = new ArrayList<>();
+        }
+        moves.add(move);
+    }
+
+    public void switchTurn() {
+        this.turn = this.turn.opposite();
+    }
+
+    public int getCurrentPlayerClock() {
+        return turn == PlayerColor.WHITE ? whiteClock : blackClock;
+    }
+
+    public void updateClock(long secondsElapsed) {
+        if (turn == PlayerColor.WHITE) {
+            whiteClock = Math.max(0, whiteClock - (int) secondsElapsed);
+        } else {
+            blackClock = Math.max(0, blackClock - (int) secondsElapsed);
+        }
+    }
+
+    public boolean isTimedOut() {
+        return whiteClock <= 0 || blackClock <= 0;
+    }
+
+    // Getters y Setters con compatibilidad String
     public Long getId() {
         return id;
     }
 
     public String getPlayerColor() {
-        return playerColor;
+        return playerColor != null ? playerColor.getValue() : null;
     }
 
     public void setPlayerColor(String playerColor) {
+        this.playerColor = PlayerColor.fromString(playerColor);
+    }
+
+    public PlayerColor getPlayerColorEnum() {
+        return playerColor;
+    }
+
+    public void setPlayerColorEnum(PlayerColor playerColor) {
         this.playerColor = playerColor;
     }
 
@@ -62,18 +136,44 @@ public class Game {
     }
 
     public String getStatus() {
-        return status;
+        return status != null ? status.getValue() : null;
     }
 
-    public String getFen() {
-        return fen;
+    public String getPgn() {
+        return pgn;
     }
 
-    public void setFen(String fen) {
-        this.fen = fen;
+    public void setPgn(String pgn) {
+        this.pgn = pgn;
     }
 
     public void setStatus(String status) {
+        switch (status.toLowerCase()) {
+            case "active":
+                this.status = GameStatus.ACTIVE;
+                break;
+            case "mate":
+                this.status = GameStatus.MATE;
+                break;
+            case "stalemate":
+                this.status = GameStatus.STALEMATE;
+                break;
+            case "draw":
+                this.status = GameStatus.DRAW;
+                break;
+            case "timeout":
+                this.status = GameStatus.TIMEOUT;
+                break;
+            default:
+                throw new IllegalArgumentException("Estado inválido: " + status);
+        }
+    }
+
+    public GameStatus getStatusEnum() {
+        return status;
+    }
+
+    public void setStatusEnum(GameStatus status) {
         this.status = status;
     }
 
@@ -94,10 +194,18 @@ public class Game {
     }
 
     public String getTurn() {
-        return turn;
+        return turn != null ? turn.getValue() : null;
     }
 
     public void setTurn(String turn) {
+        this.turn = PlayerColor.fromString(turn);
+    }
+
+    public PlayerColor getTurnEnum() {
+        return turn;
+    }
+
+    public void setTurnEnum(PlayerColor turn) {
         this.turn = turn;
     }
 
