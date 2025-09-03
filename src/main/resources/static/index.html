@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>♟️ Chess Game - Ajedrez Online</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-chess-king"></i> Chess Game</h1>
+                <div class="header-actions">
+                    <button id="newGameBtn" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Nueva Partida
+                    </button>
+                    <button id="importPgnBtn" class="btn btn-secondary">
+                        <i class="fas fa-upload"></i> Importar PGN
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Game Setup Panel -->
+            <div id="gameSetup" class="setup-panel">
+                <div class="setup-card">
+                    <h2><i class="fas fa-cog"></i> Configurar Nueva Partida</h2>
+                    <form id="gameSetupForm">
+                        <div class="form-group">
+                            <label for="playerColor">
+                                <i class="fas fa-chess-pawn"></i> Tu Color:
+                            </label>
+                            <select id="playerColor" name="playerColor" class="form-select" required>
+                                <option value="WHITE" selected>⚪ Blancas</option>
+                                <option value="BLACK">⚫ Negras</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="timeControl">
+                                <i class="fas fa-clock"></i> Control de Tiempo:
+                            </label>
+                            <select id="timeControl" name="timeControl" class="form-select" required>
+                                <option value="300" selected>5 minutos</option>
+                                <option value="600">10 minutos</option>
+                                <option value="900">15 minutos</option>
+                                <option value="1800">30 minutos</option>
+                                <option value="3600">1 hora</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-play"></i> Comenzar Partida
+                            </button>
+                            <button type="button" id="cancelSetup" class="btn btn-cancel">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Import PGN Panel -->
+            <div id="importPanel" class="setup-panel" style="display: none;">
+                <div class="setup-card">
+                    <h2><i class="fas fa-upload"></i> Importar Partida PGN</h2>
+                    <form id="importPgnForm">
+                        <div class="form-group">
+                            <label for="pgnInput">
+                                <i class="fas fa-file-text"></i> Movimientos PGN:
+                            </label>
+                            <textarea id="pgnInput" class="form-textarea" 
+                                placeholder="Ejemplo: e2e4 e7e5 g1f3 b8c6..."
+                                rows="4"></textarea>
+                            <small class="form-help">
+                                Ingresa los movimientos en formato LAN (ej: e2e4, g1f3)
+                            </small>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="whiteTime">
+                                    <i class="fas fa-clock"></i> Tiempo Blancas (seg):
+                                </label>
+                                <input type="number" id="whiteTime" class="form-input" 
+                                       value="300" min="60" max="7200">
+                            </div>
+                            <div class="form-group">
+                                <label for="blackTime">
+                                    <i class="fas fa-clock"></i> Tiempo Negras (seg):
+                                </label>
+                                <input type="number" id="blackTime" class="form-input" 
+                                       value="300" min="60" max="7200">
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-upload"></i> Importar Partida
+                            </button>
+                            <button type="button" id="cancelImport" class="btn btn-cancel">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Game Board Area -->
+            <div id="gameArea" class="game-area" style="display: none;">
+                <div class="game-container">
+                    <!-- Player Info Top -->
+                    <div class="player-info player-top">
+                        <div class="player-details">
+                            <div class="player-name">
+                                <i class="fas fa-chess-pawn"></i>
+                                <span id="topPlayerName">Oponente</span>
+                                <span id="topPlayerColor" class="player-color"></span>
+                            </div>
+                            <div class="player-clock" id="topPlayerClock">
+                                <i class="fas fa-clock"></i>
+                                <span class="time-display">05:00</span>
+                            </div>
+                        </div>
+                        <div class="player-status" id="topPlayerStatus"></div>
+                    </div>
+
+                    <!-- Chess Board -->
+                    <div class="board-container">
+                        <div id="chessBoard" class="chess-board">
+                            <!-- Squares will be generated by JavaScript -->
+                        </div>
+                        <div class="board-coordinates">
+                            <div class="files">
+                                <span>a</span><span>b</span><span>c</span><span>d</span>
+                                <span>e</span><span>f</span><span>g</span><span>h</span>
+                            </div>
+                            <div class="ranks">
+                                <span>8</span><span>7</span><span>6</span><span>5</span>
+                                <span>4</span><span>3</span><span>2</span><span>1</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Player Info Bottom -->
+                    <div class="player-info player-bottom">
+                        <div class="player-details">
+                            <div class="player-name">
+                                <i class="fas fa-chess-pawn"></i>
+                                <span id="bottomPlayerName">Tú</span>
+                                <span id="bottomPlayerColor" class="player-color"></span>
+                            </div>
+                            <div class="player-clock" id="bottomPlayerClock">
+                                <i class="fas fa-clock"></i>
+                                <span class="time-display">05:00</span>
+                            </div>
+                        </div>
+                        <div class="player-status" id="bottomPlayerStatus"></div>
+                    </div>
+                </div>
+
+                <!-- Game Controls -->
+                <div class="game-controls">
+                    <div class="control-group">
+                        <h3><i class="fas fa-gamepad"></i> Controles</h3>
+                        <div class="control-buttons">
+                            <button id="resignBtn" class="btn btn-danger">
+                                <i class="fas fa-flag"></i> Rendirse
+                            </button>
+                            <button id="drawBtn" class="btn btn-warning">
+                                <i class="fas fa-handshake"></i> Ofrecer Empate
+                            </button>
+                            <button id="exportBtn" class="btn btn-info">
+                                <i class="fas fa-download"></i> Exportar PGN
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Move Input -->
+                    <div class="control-group">
+                        <h3><i class="fas fa-chess-knight"></i> Hacer Movimiento</h3>
+                        <form id="moveForm">
+                            <div class="move-input-group">
+                                <input type="text" id="moveInput" class="form-input" 
+                                       placeholder="ej: e2e4" autocomplete="off">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane"></i> Mover
+                                </button>
+                            </div>
+                            <small class="form-help">
+                                Formato: origen-destino (ej: e2e4, g1f3, e1g1 para enroque)
+                            </small>
+                        </form>
+                    </div>
+
+                    <!-- Game Info -->
+                    <div class="control-group">
+                        <h3><i class="fas fa-info-circle"></i> Estado del Juego</h3>
+                        <div class="game-status">
+                            <div class="status-item">
+                                <strong>Turno:</strong> 
+                                <span id="currentTurn">Blancas</span>
+                            </div>
+                            <div class="status-item">
+                                <strong>Estado:</strong> 
+                                <span id="gameStatus">En progreso</span>
+                            </div>
+                            <div class="status-item">
+                                <strong>Movimientos:</strong> 
+                                <span id="moveCount">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Move History -->
+            <div id="moveHistory" class="move-history" style="display: none;">
+                <h3><i class="fas fa-history"></i> Historial de Movimientos</h3>
+                <div class="moves-list" id="movesList">
+                    <!-- Moves will be added here -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 Chess Game - Desarrollado con Spring Boot & chesslib</p>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <i class="fas fa-chess-knight fa-spin"></i>
+            <p>Cargando...</p>
+        </div>
+    </div>
+
+    <!-- Message Toast -->
+    <div id="messageToast" class="message-toast" style="display: none;">
+        <div class="toast-content">
+            <i class="toast-icon"></i>
+            <span class="toast-message"></span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/chess-pieces.js"></script>
+    <script src="js/chess-board.js"></script>
+    <script src="js/chess-api.js"></script>
+    <script src="js/chess-game.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

@@ -10,8 +10,8 @@ public final class GameConstants {
     public static final String STATUS_TIMEOUT = "timeout";
 
     // Colores de jugadores
-    public static final String COLOR_WHITE = "white";
-    public static final String COLOR_BLACK = "black";
+    public static final String COLOR_WHITE = "WHITE";
+    public static final String COLOR_BLACK = "BLACK";
 
     // Valores por defecto
     public static final int DEFAULT_CLOCK_SECONDS = 300;
@@ -21,7 +21,7 @@ public final class GameConstants {
     public static final String MSG_EMPTY_MOVE = "El movimiento no puede estar vacío";
     public static final String MSG_GAME_NOT_ACTIVE = "La partida ya no está activa.";
     public static final String MSG_GAME_NOT_FOUND = "Partida no encontrada";
-    public static final String MSG_INVALID_COLOR = "El color solo puede ser 'white' o 'black'";
+    public static final String MSG_INVALID_COLOR = "El color solo puede ser 'WHITE' o 'BLACK'";
     public static final String MSG_INVALID_TIME = "El tiempo debe ser positivo";
     public static final String MSG_ILLEGAL_MOVE = "Movimiento no válido: ";
     public static final String MSG_CHECKMATE_WHITE_WINS = "Jaque mate. Ganador: Blanco";

@@ -1,8 +1,8 @@
 package com.chess.model;
 
 public enum PlayerColor {
-    WHITE("white"),
-    BLACK("black");
+    WHITE("WHITE"),
+    BLACK("BLACK");
 
     private final String value;
 
@@ -24,11 +24,15 @@ public enum PlayerColor {
     }
 
     public static PlayerColor fromString(String color) {
+        if (color == null) {
+            throw new IllegalArgumentException("El color no puede ser null");
+        }
+
         for (PlayerColor playerColor : values()) {
-            if (playerColor.value.equals(color)) {
+            if (playerColor.value.equalsIgnoreCase(color.trim())) {
                 return playerColor;
             }
         }
-        throw new IllegalArgumentException("Color inválido: " + color);
+        throw new IllegalArgumentException("El color solo puede ser 'WHITE' o 'BLACK'");
     }
 }

@@ -2,6 +2,7 @@ package com.chess.controller;
 
 import com.chess.model.Game;
 import com.chess.model.GameConstants;
+import com.chess.model.Winner;
 import com.chess.service.ChessGameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -41,23 +42,33 @@ public class GameController {
         }
     }
 
-    @PostMapping
-    public ResponseEntity<Game> createGame(@RequestParam String playerColor,
-            @RequestParam(defaultValue = "300") int whiteClock,
-            @RequestParam(defaultValue = "300") int blackClock) {
+    @PostMapping("/create")
+    public ResponseEntity<String> createGame(@RequestParam String playerColor,
+            @RequestParam(defaultValue = "300") int timeControlSeconds) {
         try {
-            Game game = chessGameService.createGame(playerColor, whiteClock, blackClock);
-            return ResponseEntity.ok(game);
+            Game game = chessGameService.createGame(playerColor, timeControlSeconds, timeControlSeconds);
+            String response = buildGameResponse(game);
+            return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error inesperado: " + e.getMessage());
         }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Game> getGame(@PathVariable Long id) {
-        Optional<Game> game = chessGameService.findGame(id);
-        return game.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<String> getGame(@PathVariable Long id) {
+        try {
+            Optional<Game> game = chessGameService.findGame(id);
+            if (game.isPresent()) {
+                String response = buildGameResponse(game.get());
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al obtener el juego: " + e.getMessage());
+        }
     }
 
     @GetMapping("/{id}/moves")
@@ -70,6 +81,31 @@ public class GameController {
         }
     }
 
+    @PostMapping("/import/pgn")
+    public ResponseEntity<Game> importPgn(@RequestParam String pgn,
+            @RequestParam(defaultValue = "300") int whiteClock,
+            @RequestParam(defaultValue = "300") int blackClock) {
+        try {
+            Game game = chessGameService.importFromPgn(pgn, whiteClock, blackClock);
+            return ResponseEntity.ok(game);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // Endpoint temporal para limpiar datos de prueba
+    @DeleteMapping("/cleanup")
+    public ResponseEntity<String> cleanupTestData() {
+        try {
+            chessGameService.cleanupTestData();
+            return ResponseEntity.ok("Datos de prueba eliminados exitosamente");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al limpiar datos: " + e.getMessage());
+        }
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> handleIllegalArgument(IllegalArgumentException ex) {
         return ResponseEntity.badRequest().body(ex.getMessage());
@@ -79,37 +115,26 @@ public class GameController {
     private String buildGameResponse(Game game) {
         StringBuilder response = new StringBuilder();
 
-        // Mensaje según el estado del juego
-        String statusMessage = getStatusMessage(game);
-        response.append(statusMessage).append("\n");
-
-        // Información del juego
-        response.append("PGN: ").append(game.getPgn()).append("\n");
-        response.append("Tiempo blanco: ").append(game.getWhiteClock()).append(" segundos\n");
-        response.append("Tiempo negro: ").append(game.getBlackClock()).append(" segundos\n");
-        response.append("Turno: ").append(game.getTurn()).append("\n");
+        // Información completa del juego para el frontend
+        response.append("ID del Juego: ").append(game.getId()).append("\n");
+        response.append("Tu Color: ").append(game.getPlayerColor()).append("\n");
+        response.append("Turno Actual: ").append(game.getTurn()).append("\n");
         response.append("Estado: ").append(game.getStatus()).append("\n");
+
+        if (game.getWinner() != null && game.getWinner() != Winner.NONE) {
+            response.append("Ganador: ").append(game.getWinner()).append("\n");
+        }
+
+        response.append("Tiempo Blancas: ").append(formatTime(game.getWhiteClock())).append("\n");
+        response.append("Tiempo Negras: ").append(formatTime(game.getBlackClock())).append("\n");
+        response.append("PGN: ").append(game.getPgn() != null ? game.getPgn() : "").append("\n");
 
         return response.toString();
     }
 
-    private String getStatusMessage(Game game) {
-        switch (game.getStatus()) {
-            case "mate":
-                return game.getWinner().name().equals("WHITE")
-                        ? GameConstants.MSG_CHECKMATE_WHITE_WINS
-                        : GameConstants.MSG_CHECKMATE_BLACK_WINS;
-            case "stalemate":
-                return GameConstants.MSG_STALEMATE;
-            case "draw":
-                return GameConstants.MSG_DRAW;
-            case "timeout":
-                return game.getWhiteClock() <= 0
-                        ? GameConstants.MSG_TIMEOUT_BLACK_WINS
-                        : GameConstants.MSG_TIMEOUT_WHITE_WINS;
-            case "active":
-            default:
-                return GameConstants.MSG_MOVE_SUCCESS;
-        }
+    private String formatTime(int seconds) {
+        int minutes = seconds / 60;
+        int remainingSeconds = seconds % 60;
+        return String.format("%d:%02d", minutes, remainingSeconds);
     }
 }
